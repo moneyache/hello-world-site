@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello World - 我的个人站点</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: #fff;
+            overflow: hidden;
+        }
+
+        .container {
+            text-align: center;
+            z-index: 1;
+            padding: 2rem;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-weight: 700;
+            background: linear-gradient(90deg, #f093fb, #f5576c, #4facfe, #00f2fe);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradient 4s ease infinite;
+            margin-bottom: 1rem;
+        }
+
+        @keyframes gradient {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .subtitle {
+            font-size: clamp(1rem, 3vw, 1.4rem);
+            color: rgba(255, 255, 255, 0.7);
+            margin-bottom: 2rem;
+            letter-spacing: 0.05em;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        .info-card p {
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        .info-card .highlight {
+            color: #4facfe;
+            font-weight: 600;
+        }
+
+        .timestamp {
+            margin-top: 2rem;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Floating particles */
+        .particles {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 4px; height: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            animation: float linear infinite;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) scale(0); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-10vh) scale(1); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+    <div class="container">
+        <h1>Hello, World!</h1>
+        <p class="subtitle">这是我的第一个个人站点</p>
+        <div class="info-card">
+            <p>
+                这个页面由 <span class="highlight">CatPaw</span> 自动生成并部署。<br>
+                托管平台：<span class="highlight" id="platform">GitHub Pages</span><br>
+                部署方式：<span class="highlight">Git Push → 自动构建</span>
+            </p>
+        </div>
+        <p class="timestamp" id="timestamp"></p>
+    </div>
+
+    <script>
+        // Timestamp
+        document.getElementById('timestamp').textContent =
+            '页面生成于 ' + new Date().toLocaleString('zh-CN', { timeZone: 'Asia/Shanghai' });
+
+        // Particles
+        const container = document.getElementById('particles');
+        for (let i = 0; i < 40; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDuration = (Math.random() * 8 + 6) + 's';
+            p.style.animationDelay = (Math.random() * 10) + 's';
+            p.style.width = p.style.height = (Math.random() * 3 + 2) + 'px';
+            container.appendChild(p);
+        }
+    </script>
+</body>
+</html>
