@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth0 认证示例</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+        .container {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.08);
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        h1 { font-size: 1.5rem; margin-bottom: 0.5rem; }
+        .desc { color: #666; font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.6; }
+        button {
+            padding: 0.75rem 2rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin: 0.3rem;
+            transition: transform 0.1s;
+        }
+        button:active { transform: scale(0.97); }
+        .btn-login { background: #635dff; color: #fff; }
+        .btn-logout { background: #e8e8e8; color: #333; }
+        .profile {
+            margin-top: 1.5rem;
+            padding: 1.5rem;
+            background: #f0f4ff;
+            border-radius: 8px;
+            text-align: left;
+            display: none;
+        }
+        .profile img {
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-right: 0.8rem;
+        }
+        .profile .name { font-weight: 600; font-size: 1.1rem; }
+        .profile .email { color: #666; font-size: 0.85rem; }
+        .profile .token-preview {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            background: #e2e8f0;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            word-break: break-all;
+            color: #444;
+            max-height: 80px;
+            overflow: auto;
+        }
+        .step { text-align: left; margin-bottom: 1.5rem; }
+        .step h3 { font-size: 0.95rem; color: #635dff; margin-bottom: 0.3rem; }
+        .step p { font-size: 0.85rem; color: #555; line-height: 1.6; }
+        .step code {
+            background: #f0f0f0;
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Auth0 认证流程演示</h1>
+        <p class="desc">点击登录后，浏览器会跳转到 Auth0 托管的登录页面完成认证，<br>认证成功后自动跳回本页并展示用户信息。</p>
+
+        <div id="guest">
+            <button class="btn-login" onclick="login()">登录 / 注册</button>
+        </div>
+
+        <div id="user" style="display:none">
+            <button class="btn-logout" onclick="logout()">退出登录</button>
+            <div class="profile" id="profile"></div>
+        </div>
+
+        <hr style="margin: 2rem 0; border: none; border-top: 1px solid #eee;">
+
+        <div class="step">
+            <h3>第一步：注册 Auth0 账号，创建 Application</h3>
+            <p>在 <code>auth0.com</code> 免费注册，创建一个 Single Page Application 类型的应用，
+               拿到 <code>domain</code> 和 <code>clientId</code> 两个值。</p>
+        </div>
+
+        <div class="step">
+            <h3>第二步：配置回调地址</h3>
+            <p>在 Auth0 后台把你的网站地址加到 Allowed Callback URLs、Allowed Logout URLs、
+               Allowed Web Origins 三个地方（比如 <code>https://moneyache.github.io</code>）。</p>
+        </div>
+
+        <div class="step">
+            <h3>第三步：引入 SDK，三行代码搞定</h3>
+            <p>引入 <code>@auth0/auth0-spa-js</code>，调用 <code>loginWithRedirect()</code> 登录、
+               <code>getUser()</code> 获取用户信息、<code>getTokenSilently()</code> 拿 JWT token。</p>
+        </div>
+    </div>
+
+    <!--
+        Auth0 SPA SDK：这是 Auth0 官方提供的前端 SDK，
+        封装了 OAuth 2.0 PKCE 流程，开发者无需手动处理授权码交换。
+    -->
+    <script src="https://cdn.auth0.com/js/auth0-spa-js/2.0/auth0-spa-js.production.js"></script>
+
+    <script>
+        // ===== 配置区：替换为你自己的 Auth0 应用信息 =====
+        const AUTH0_DOMAIN   = 'moneyache.us.auth0.com';  // Auth0 租户域名
+        const AUTH0_CLIENT_ID = 'EkH9NO7IZkREQ4xznBzTGBDmGBJMdM34';         // 应用的 Client ID
+        // ================================================
+
+        let auth0Client = null;
+
+        // 初始化 Auth0 客户端
+        async function initAuth0() {
+            auth0Client = await auth0.createAuth0Client({
+                domain:       AUTH0_DOMAIN,
+                clientId:     AUTH0_CLIENT_ID,
+                authorizationParams: {
+                    redirect_uri: window.location.origin + window.location.pathname
+                }
+            });
+
+            // 处理登录回调：Auth0 重定向回来时 URL 带有 code 和 state 参数
+            const query = window.location.search;
+            if (query.includes('code=') && query.includes('state=')) {
+                await auth0Client.handleRedirectCallback();
+                // 清理 URL 中的授权码参数
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+
+            await updateUI();
+        }
+
+        // 登录：重定向到 Auth0 托管的登录页面
+        async function login() {
+            await auth0Client.loginWithRedirect();
+            // 此处浏览器会跳转离开，不会执行后续代码
+        }
+
+        // 退出登录
+        function logout() {
+            auth0Client.logout({
+                logoutParams: {
+                    returnTo: window.location.origin + window.location.pathname
+                }
+            });
+        }
+
+        // 根据登录状态更新页面
+        async function updateUI() {
+            const isAuthenticated = await auth0Client.isAuthenticated();
+
+            document.getElementById('guest').style.display = isAuthenticated ? 'none' : 'block';
+            document.getElementById('user').style.display   = isAuthenticated ? 'block' : 'none';
+
+            if (isAuthenticated) {
+                const user  = await auth0Client.getUser();
+                const token = await auth0Client.getTokenSilently();
+
+                const profileDiv = document.getElementById('profile');
+                profileDiv.style.display = 'block';
+                profileDiv.innerHTML = `
+                    <div>
+                        <img src="${user.picture}" alt="avatar">
+                        <span class="name">${user.name}</span><br>
+                        <span class="email">${user.email}</span>
+                    </div>
+                    <div class="token-preview">
+                        <strong>JWT Token（前100字符）:</strong><br>
+                        ${token.substring(0, 100)}...
+                    </div>
+                `;
+            }
+        }
+
+        // 页面加载时初始化
+        initAuth0();
+    </script>
+</body>
+</html>
