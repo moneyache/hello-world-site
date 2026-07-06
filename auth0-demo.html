@@ -132,7 +132,7 @@
                 domain:       AUTH0_DOMAIN,
                 clientId:     AUTH0_CLIENT_ID,
                 authorizationParams: {
-                    redirect_uri: window.location.origin + window.location.pathname
+                    redirect_uri: window.location.origin
                 }
             });
 
@@ -157,7 +157,7 @@
         function logout() {
             auth0Client.logout({
                 logoutParams: {
-                    returnTo: window.location.origin + window.location.pathname
+                    returnTo: window.location.origin
                 }
             });
         }
